@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>OptiExtract — Upload</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Inter, Arial, sans-serif; margin: 32px; }
+    .card { max-width: 640px; margin: 24px auto; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .btn { background:#0b69ff; color: #fff; padding:10px 14px; border:none; border-radius:6px; cursor:pointer; }
+    .status { margin-top: 12px; font-size: 14px; }
+    input[type="file"] { margin-bottom: 12px; }
+    pre { background: #f6f8fa; padding: 10px; border-radius: 6px; overflow-x:auto; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Upload a file</h2>
+    <p>Select any file (PDF, image, text) and click Upload.</p>
+
+    <input id="fileInput" type="file" />
+    <br/>
+    <button id="uploadBtn" class="btn">Upload File</button>
+
+    <div class="status" id="status"></div>
+
+    <hr/>
+    <a href="/static/files.html">View uploaded file history</a>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    uploadBtn.addEventListener('click', async () => {
+      const input = document.getElementById('fileInput');
+      if (!input.files || input.files.length === 0) {
+        statusEl.innerText = 'Please choose a file first.';
+        statusEl.style.color = 'crimson';
+        return;
+      }
+
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      statusEl.innerText = 'Uploading...';
+      statusEl.style.color = 'black';
+
+      try {
+        const res = await fetch('/upload-document', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          statusEl.innerText = 'Upload failed: ' + text;
+          statusEl.style.color = 'crimson';
+          return;
+        }
+
+        const json = await res.json();
+        statusEl.innerHTML = `<strong>Uploaded ✅</strong><br/>Original: ${json.original_filename}<br/>Stored: ${json.system_filename}<br/>Size: ${json.file_size_bytes} bytes`;
+        statusEl.style.color = 'green';
+      } catch (err) {
+        statusEl.innerText = 'Upload error: ' + err.message;
+        statusEl.style.color = 'crimson';
+      }
+    });
+  </script>
+</body>
+</html>

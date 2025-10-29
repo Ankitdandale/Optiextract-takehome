@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>OptiExtract — Files</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Inter, Arial, sans-serif; margin: 24px; }
+    table { width:100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+    th { background: #f4f6fb; }
+    .center { max-width: 900px; margin: 0 auto; }
+    .btn { background:#0b69ff; color: #fff; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <h2>Uploaded files</h2>
+    <p><a href="/static/upload.html" class="btn">Upload another file</a></p>
+    <table id="filesTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Original Filename</th>
+          <th>System Filename</th>
+          <th>Size (bytes)</th>
+          <th>Uploaded At (UTC)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="status" style="margin-top:10px"></div>
+  </div>
+
+  <script>
+    const tbody = document.querySelector('#filesTable tbody');
+    const status = document.getElementById('status');
+
+    async function loadFiles() {
+      status.innerText = 'Loading...';
+      try {
+        const res = await fetch('/files');
+        if (!res.ok) {
+          status.innerText = 'Failed to fetch files: ' + res.status;
+          return;
+        }
+        const files = await res.json();
+        tbody.innerHTML = '';
+        if (files.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">No files uploaded yet.</td></tr>';
+        } else {
+          files.forEach(f => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${f.id}</td>
+                            <td>${f.original_filename}</td>
+                            <td>${f.system_filename}</td>
+                            <td>${f.file_size_bytes}</td>
+                            <td>${new Date(f.uploaded_at).toLocaleString()}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+        status.innerText = '';
+      } catch (err) {
+        status.innerText = 'Error: ' + err.message;
+      }
+    }
+
+    loadFiles();
+  </script>
+</body>
+</html>
